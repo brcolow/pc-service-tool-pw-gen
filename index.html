@@ -55,7 +55,7 @@
   Brand.fillComboBox(document.getElementById("brand"));
   UserType.fillComboBox(document.getElementById("userType"));
   document.getElementById("generate").onclick = async () => {
-    const generatedPassword = await generatePassword(document.getElementById("username").value,
+    const generatedPassword = await generatePassword(document.getElementById("username").value.toUpperCase(),
       document.getElementById("expirationYears").value,
       document.getElementById("majorVersion").value,
       document.getElementById("minorVersion").value,
