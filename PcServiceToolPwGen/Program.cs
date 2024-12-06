@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography;
+using System.Text;
 
 class Program
 {
@@ -13,19 +14,19 @@ class Program
   static void Main(string[] args)
   {
     TryDecodePassword("LOmi83NMMIb2//Yh9fXyDg");
-    string userID = "HYSTER";
-    string generatedPassword = GeneratePassword(userID, Brand.Hyster, UserType.Development);
+    string userID = "KOKOMO";
+    string generatedPassword = GeneratePassword(userID, 5, 1, AccessLevel.Development, Brand.Hyster, UserType.Development);
     Console.WriteLine("Your username is: " + userID + "\r\nYour generated password is:\r\n" + generatedPassword);
     TryDecodePassword(generatedPassword);
   }
 
-  static string GeneratePassword(string userID, Brand brand, UserType userType)
+  static string GeneratePassword(string userID, int majorVersion, int minorVersion, AccessLevel accessLevel, Brand brand, UserType userType)
   {
     byte[] outputBuffer = new byte[16];
 
     // userid
     // Base36 decode the userID
-    byte[] userIDBytes = ConvertBase36StringToBytes("HYSTER");
+    byte[] userIDBytes = ConvertBase36StringToBytes(userID);
     outputBuffer[0] = userIDBytes[0];
     outputBuffer[1] = userIDBytes[1];
     outputBuffer[2] = userIDBytes[2];
@@ -33,10 +34,7 @@ class Program
     outputBuffer[4] = userIDBytes[4];
     outputBuffer[5] = userIDBytes[5];
 
-    int accessLevelValue = (int)AccessLevel.Development;
-    accessLevelValue &= 0b111;  // Mask the lower 3 bits
-    // outputBuffer[5] &= 0b11100011;  // Mask to clear bits 4, 5, 6 (11100011 leaves 4,5,6 clear)
-    outputBuffer[5] |= (byte)(accessLevelValue << 4);  // Shift left by 4 and OR to set bits 4,5,6
+    outputBuffer[5] |= (byte)((int) accessLevel << 4);  // Shift left by 4 and OR to set bits 4,5,6
 
     // Convert the timestamp to the required byte array format
     DateTime expirationDate = DateTime.Now.AddYears(5);
@@ -48,18 +46,18 @@ class Program
     outputBuffer[7] = (byte)((targetTimestamp >> 40) & 0xFF);
     outputBuffer[6] = (byte)((targetTimestamp >> 32) & 0xFF);
     // Major version
-    outputBuffer[10] = 5;
+    outputBuffer[10] = (byte) majorVersion;
     // Minor version
-    outputBuffer[11] = 1;
+    outputBuffer[11] = (byte) minorVersion;
 
     byte brandValue = (byte)brand;
     byte userTypeValue = (byte)((int)userType << 4);
     byte combinedValue = (byte)(brandValue | userTypeValue);
     outputBuffer[12] = combinedValue;
 
-    // Now we need to AES encrypt with the key and iv (128-bit block size - although I think we only use 96 bits as 12*8 = 96).
+    // Now we need to AES encrypt with the key and iv.
     byte[] key = [22, 210, 29, 30, 134, 215, 228, 40, 196, 153, 254, 103, 184, 52, 88, 201];
-    byte[] iv = [128, 214, 58, 190, 150, 225, 47, 176, 184, 252, 245, 124, 237, 239, 20, 93];
+    byte[] iv =  [128, 214, 58, 190, 150, 225, 47, 176, 184, 252, 245, 124, 237, 239, 20, 93];
     byte[] encryptedBytes;
     string base64EncodedEncryptedBytes;
     using (Aes aes = Aes.Create())
@@ -67,6 +65,7 @@ class Program
       aes.Key = key;
       aes.IV = iv;
       aes.Padding = PaddingMode.None;
+      aes.Mode = CipherMode.CBC; // Default but just for clarity.
 
       ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
       using MemoryStream msEncrypt = new();
@@ -104,19 +103,19 @@ class Program
   static void InitBase36Map()
   {
     for (int index = 0; index < 10; ++index)
-      base36Map[index] = (char)(index + 48);
+      base36Map[index] = (char)(index + 48); // 0 through 9
     for (int index = 10; index < 36; ++index)
-      base36Map[index] = (char)(index + 55);
+      base36Map[index] = (char)(index + 55); // A through Z
   }
 
   static string ConvertBytesToBase36String(byte[] b)
   {
-    // Pad the byte array with zeros if it has less than 8 bytes (CODE ADDED BY ME)
+    // Pad the byte array with zeros if it has less than 8 bytes
     if (b.Length < 8)
     {
-      byte[] paddedBytes = new byte[8]; // Create an 8-byte array
-      Array.Copy(b, 0, paddedBytes, 8 - b.Length, b.Length); // Copy the original bytes to the end of the new array
-      b = paddedBytes; // Use the padded array
+      byte[] paddedBytes = new byte[8];
+      Array.Copy(b, 0, paddedBytes, 8 - b.Length, b.Length);
+      b = paddedBytes;
     }
 
     long int64 = BitConverter.ToInt64(b, 0);
@@ -138,10 +137,14 @@ class Program
       byte[] inputBuffer = Convert.FromBase64String(rawPassword + "=="); // Needs 2 padding chars which means it's a multiple of 4. rawPassword is 14 bytes + 2 padding = 16 which is a multiple of 4.
       byte[] key = [22, 210, 29, 30, 134, 215, 228, 40, 196, 153, 254, 103, 184, 52, 88, 201];
       byte[] iv = [128, 214, 58, 190, 150, 225, 47, 176, 184, 252, 245, 124, 237, 239, 20, 93];
+      Console.WriteLine(BitConverter.ToString(inputBuffer));
+      Console.WriteLine(BitConverter.ToString(key));
+      Console.WriteLine(BitConverter.ToString(iv));
       Aes aes = Aes.Create();
       aes.BlockSize = 128;
       aes.Key = key;
       aes.IV = iv;
+      aes.Mode = CipherMode.CBC; // Default but just for clarity.
       aes.Padding = PaddingMode.None;
       ICryptoTransform decryptor = aes.CreateDecryptor();
       int secondTime = decryptor.TransformBlock(inputBuffer, 0, 16, outputBuffer, 0);

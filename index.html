@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="none">
+    <meta name="referrer" content="no-referrer">
+    <script src="pw-gen.js"></script>
+    <title>PC Service Tool Password Generator</title>
+    <style>
+      label {
+        padding: 5px;
+      }
+      input, select {
+        margin: 3px;
+      }
+      #password, #passwordLabel {
+        visibility: hidden;
+      }
+    </style>
+  </head>
+<body>
+<noscript>
+    This website requires JavaScript.
+</noscript>
+<label for="username">Username (6 characters):</label>
+<input type="text" id="username" name="username" minlength="6" maxlength="6" size="10" value="HYSTER"/>
+<br>
+<label for="expirationYears">Expires in N years from now:</label>
+<input type="number" id="expirationYears" name="expirationYears" min="1" minlength="1" maxlength="2" size="2" value="5"/>
+<br>
+<label for="majorVersion">Major version:</label>
+<input type="number" id="majorVersion" name="majorVersion" min="1" minlength="1" maxlength="1" size="1" value="5"/>
+<br>
+<label for="minorVersion">Major version:</label>
+<input type="number" id="minorVersion" name="minorVersion" min="1" minlength="1" maxlength="1" size="1" value="1"/>
+<br>
+<label for="accessLevel">Access Level:</label>
+<select id="accessLevel" name="accessLevel">
+</select>
+<br>
+<label for="brand">Brand:</label>
+<select id="brand" name="brand">
+</select>
+<br>
+<label for="brand">User Type:</label>
+<select id="userType" name="userType">
+</select>
+<br><br>
+<button type="button" id="generate">Generate Password</button>
+<br><br>
+<label id="passwordLabel" for="password">Password:</label>
+<input type="text" id="password" readonly size="23"/>
+<script>
+  AccessLevel.fillComboBox(document.getElementById("accessLevel"));
+  Brand.fillComboBox(document.getElementById("brand"));
+  UserType.fillComboBox(document.getElementById("userType"));
+  document.getElementById("generate").onclick = async () => {
+    const generatedPassword = await generatePassword(document.getElementById("username").value,
+      document.getElementById("expirationYears").value,
+      document.getElementById("majorVersion").value,
+      document.getElementById("minorVersion").value,
+      AccessLevel.getEnumByValue(document.getElementById("accessLevel").value),
+      Brand.getEnumByValue(document.getElementById("brand").value),
+      UserType.getEnumByValue(document.getElementById("userType").value));
+    document.getElementById("password").value = generatedPassword;
+    document.getElementById("password").style.visibility = "visible";
+    document.getElementById("passwordLabel").style.visibility = "visible";
+  };
+</script>
+</body>
+</html>
