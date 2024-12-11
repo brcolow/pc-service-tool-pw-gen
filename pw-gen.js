@@ -40,7 +40,7 @@ const base36Map = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function getCurrentDatePlusYears(numYears) {
   const currentDate = new Date();
-  currentDate.setFullYear(currentDate.getFullYear() + numYears);
+  currentDate.setFullYear(currentDate.getFullYear() + Number(numYears));
   return currentDate;
 }
 
