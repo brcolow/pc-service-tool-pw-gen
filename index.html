@@ -58,7 +58,7 @@
     const generatedPassword = await generatePassword(document.getElementById("username").value.toUpperCase(),
       document.getElementById("expirationYears").value,
       document.getElementById("majorVersion").value,
-      document.getElementById("minorVersion").value,
+      document.getElementById("minorVersion").value.charAt(0),
       AccessLevel.getEnumByValue(document.getElementById("accessLevel").value),
       Brand.getEnumByValue(document.getElementById("brand").value),
       UserType.getEnumByValue(document.getElementById("userType").value));

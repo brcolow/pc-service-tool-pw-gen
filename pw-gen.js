@@ -53,6 +53,8 @@ function ticksToDate(ticks) {
 }
 
 async function generatePassword(userID, years, majorVersion, minorVersion, accessLevel, brand, userType) {
+  // Strip off minor version numbers passed the first digit for compatibility.
+  minorVersion = (int)(minorVersion.ToString()[0]) - 48;
   let outputBuffer = new Uint8Array(16);
   let userIDBytes = convertBase36StringToBytes(userID);
   outputBuffer[0] = userIDBytes[0];
