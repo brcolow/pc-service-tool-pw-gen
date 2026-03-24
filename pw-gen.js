@@ -53,7 +53,7 @@ function ticksToDate(ticks) {
 }
 
 async function generatePassword(userID, years, majorVersion, minorVersion, accessLevel, brand, userType) {
-  // Strip off minor version numbers passed the first digit for compatibility.
+  // Strip off minor version numbers past the first digit for compatibility.
   minorVersion = parseInt(minorVersion.toString()[0], 10);
   let outputBuffer = new Uint8Array(16);
   let userIDBytes = convertBase36StringToBytes(userID);
@@ -65,7 +65,7 @@ async function generatePassword(userID, years, majorVersion, minorVersion, acces
   outputBuffer[5] = userIDBytes[5];
   // Modify the 5th byte to set bits 4, 5, 6 for accessLevel
   outputBuffer[5] |= (accessLevel.value << 4) & 0xF0;
-  // 621355968000000000 is the number of Ticks since Jan 1st, 1 A.D. to the Unix epoch (January 1, 1970, 00:00:00 UTC), where Javascript dates start
+  // 621355968000000000 is the number of Ticks since Jan 1st, 1 A.D. to the Unix epoch (January 1, 1970, 00:00:00 UTC), when Javascript dates start
   const targetTimestamp = (getCurrentDatePlusYears(years).getTime()) * 10000 + 621355968000000000 - (getCurrentDatePlusYears(3).getTimezoneOffset() * 600000000);
   // Assign the timestamp bytes to the outputBuffer
   outputBuffer[9] = Number((BigInt(targetTimestamp) >> 56n) & 0xFFn);
