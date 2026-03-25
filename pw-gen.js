@@ -121,12 +121,18 @@ async function decryptAES(key, iv, data) {
 
   // Super annoying/weird thing here since the password was originally encrypted with no padding (and even though the data to be
   // encrypted is exactly equal to one block of 16 bytes) so we have to do some wizardry.
-  // https://stackoverflow.com/questions/77432009/porting-node-js-crypto-code-to-subtlecrypto-webcrypto-fails-with-bad-decrypt 
+  // https://stackoverflow.com/questions/77432009/porting-node-js-crypto-code-to-subtlecrypto-webcrypto-fails-with-bad-decrypt
+  if (iv.length !== 16) {
+    throw new Error('AES-CBC iv must be 16 bytes');
+  }
+  if (data.length !== 16) {
+    throw new Error('This workaround expects exactly one 16-byte ciphertext block');
+  }
   const encPaddingBlock = await crypto.subtle.encrypt({ name: 'AES-CBC', iv: data }, cryptoKey, new Uint8Array());
   const cipherBufferPadded = concat(data, new Uint8Array(encPaddingBlock));
 
   const decryptedBuffer = await window.crypto.subtle.decrypt(
-      { name: 'AES-CBC', iv: iv, length: 128 },
+      { name: 'AES-CBC', iv: iv },
       cryptoKey,
       cipherBufferPadded
   );
